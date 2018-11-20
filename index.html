@@ -14,8 +14,8 @@
     <script>
         var remote = require('electron').remote,
         win = remote.getCurrentWindow();
-        win.setMinimumSize(550, 380);
-        win.setContentSize(550, 380);
+        win.setMinimumSize(550, 550);
+        win.setContentSize(550, 550);
 
             let interval = undefined
             function clearAll() {
@@ -28,6 +28,9 @@
                 document.getElementById('confirmations').innerHTML = ''
                 document.getElementById('time').innerHTML = ''
             }
+
+            let currentHeight
+            let txHeight
 
             function fetchData(){
                     const txid = document.getElementById('txid').value
@@ -45,10 +48,18 @@
                             
                         })
                         .then(resJson => {
+                            txHeight = resJson.blockheight
                             document.getElementById('blockheight').innerHTML = resJson.blockheight
                             document.getElementById('confirmations').innerHTML = resJson.confirmations
                             document.getElementById('time').innerHTML = new Date()
                         })
+                    
+                    fetch('https://blockexplorer.com/api/status?q=getInfo')
+                    .then(res => res.json())
+                    .then(resJson => {
+                        currentHeight = resJson.info.blocks
+                        document.getElementById('currentblockheight').innerHTML = currentHeight && txHeight ? `${currentHeight} (${currentHeight - txHeight + 1})` : currentHeight 
+                    })
                 }
     
             async function toSubmit(event) {
@@ -77,13 +88,17 @@
     </div>
     <div class="row">
             <input class="button-primary" type='submit' />
-            <button class="button" onclick="return clearAll()">Clear</button>
     </div>
     </form>
     
-    <table id="list" style="display: none">
+    <div id="list" style="display: none">
+    <table>
+            <tr>
+                    <td>Current Block Height</td>
+                    <td id="currentblockheight"></td>
+                </tr>
         <tr>
-            <td>Height</td>
+            <td>Tx-Block Height</td>
             <td id="blockheight"></td>
         </tr>
         <tr>
@@ -95,6 +110,8 @@
             <td id="time"></td>
         </tr>
     </table>
+    <button class="button" onclick="return clearAll()">Clear</button>
+</div>
 </div>
 </body>
 
