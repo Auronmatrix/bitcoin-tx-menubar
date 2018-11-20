@@ -1,0 +1,101 @@
+<html>
+<head>
+    <link href="normalize.css" type="text/css" rel="stylesheet">
+    <link href="skeleton.css" type="text/css" rel="stylesheet">
+    <title>Tx-Alert</title>
+    <style>
+    html, body {
+                min-width: 400px;
+                min-height: 300px;
+                margin: 0;
+                padding: 0;
+            }
+    </style>
+    <script>
+        var remote = require('electron').remote,
+        win = remote.getCurrentWindow();
+        win.setMinimumSize(550, 380);
+        win.setContentSize(550, 380);
+
+            let interval = undefined
+            function clearAll() {
+                if (interval) {
+                    clearInterval(interval)
+                }
+    
+                document.getElementById('list').style.display = 'none'
+                document.getElementById('blockheight').innerHTML = ''
+                document.getElementById('confirmations').innerHTML = ''
+                document.getElementById('time').innerHTML = ''
+            }
+
+            function fetchData(){
+                    const txid = document.getElementById('txid').value
+                    fetch('https://blockexplorer.com/api/tx/' + txid)
+                        .then(res => {
+                            console.log(res)
+                            if (res.ok) {
+                                return res.json()
+                            } 
+    
+                            return {
+                                blockheight: 'Unconfirmed',
+                                confirmations: 0
+                            }
+                            
+                        })
+                        .then(resJson => {
+                            document.getElementById('blockheight').innerHTML = resJson.blockheight
+                            document.getElementById('confirmations').innerHTML = resJson.confirmations
+                            document.getElementById('time').innerHTML = new Date()
+                        })
+                }
+    
+            async function toSubmit(event) {
+                event.preventDefault();
+    
+                if (interval) {
+                    clearInterval(interval)
+                }
+
+                fetchData()
+                document.getElementById('list').style.display = 'block'
+                interval = window.setInterval(fetchData, 10000)
+    
+                return false
+    
+            }
+        </script>
+</head>
+
+<body>
+    <div class="container">
+    <h4>Tx-Check</h4>
+    <form id="txidform" onsubmit="return toSubmit(event)">
+        <div class="row">
+        <input id='txid' class="u-full-width" name='txid' type='text' />
+    </div>
+    <div class="row">
+            <input class="button-primary" type='submit' />
+            <button class="button" onclick="return clearAll()">Clear</button>
+    </div>
+    </form>
+    
+    <table id="list" style="display: none">
+        <tr>
+            <td>Height</td>
+            <td id="blockheight"></td>
+        </tr>
+        <tr>
+            <td>Confirmations</td>
+            <td id="confirmations"></td>
+        </tr>
+        <tr>
+            <td>Time</td>
+            <td id="time"></td>
+        </tr>
+    </table>
+</div>
+</body>
+
+</html>
